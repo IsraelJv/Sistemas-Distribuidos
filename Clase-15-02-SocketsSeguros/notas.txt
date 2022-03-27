@@ -1,0 +1,32 @@
+# Creación de un certificado autofirmado
+keytool -genkeypair -keyalg RSA -alias certificado_servidor -keystore keystore_servidor.jks -storepass 1234567
+
+genkeypair -> genera un par de claves pública y privada
+alias      -> define un nombre con el cual vamos a identificar el certificado
+keystore   -> es un archivo (repositorio) donde se va a almacenar el certificado y la clave privada correspondiente.
+keyalg     -> es el algoritmo a utilizar para generar el par de claves, en este caso RSA
+storepass  -> es la contraseña para el keystore
+
+En java, la clave del certificado <certificado_servidor> y la clave <storepass> del almacén de claves <keystore> deben ser las mismas, en este caso: 1234567
+
+
+# Obtener el certificado contenido en el keystore
+keytool -exportcert -keystore keystore_servidor.jks -alias certificado_servidor -rfc -file certificado_servidor.pem
+
+exportcert -> lee del keystore el certificado identificado por el alias y genera un archivo texto que contiene el certificado.
+
+
+# Se crea keystore que utilizará el cliente (repositorio de confianza), en este debe contener el certificado del servidor.
+keytool -import -alias certificado_servidor -file certificado_servidor.pem -keystore keystore_cliente.jks -storepass 123456
+
+import      -> lee el archivo certificado_servidor.pem e inserta el certificado en el keystore_cliente.jks, identificando el certificado mediante el alias
+storepass   -> es la contraseña del keystore
+
+
+# Para ejecutar el servidor se debe indicar el nombre del keystore del servidor y la contraseña
+java -Djavax.net.ssl.keyStore=keystore_servidor.jks -Djavax.net.ssl.keyStorePassword=1234567 ServidorSSL
+
+# Para ejecutar el cliente se debe indicar el nombre del keystore del cliente (repositorio de confianza) y la contraseña
+java -Djavax.net.ssl.trustStore=keystore_cliente.jks -Djavax.net.ssl.trustStorePassword=123456 ClienteSSL
+
+Hay que ejecutar primero el servidor y luego el cliente, de lo contrario se podra correr el programa.
